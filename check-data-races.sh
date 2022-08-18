@@ -247,7 +247,7 @@ if [[ "$OPTION" == "--coderrect" ]]; then
 fi
 
 if [[ "$OPTION" == "--tsan-clang" ]]; then
-    scripts/test-harness.sh -t 8 -n 5 -d 32 -l $LANGUAGE -x tsan-clang
+    scripts/test-harness.sh -n 1 -d 32 -l $LANGUAGE -x tsan-clang
 fi
 
 if [[ "$OPTION" == "--tsan-gcc" ]]; then

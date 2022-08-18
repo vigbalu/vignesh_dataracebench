@@ -9,7 +9,7 @@ with open(sys.argv[1],'r') as csvfile:
 
 benchmarks={}
 for line in data[1:]:
-	benchmarks.setdefault(line[1],[]).append({"truth":line[3], "races":int(line[6]), "compiler":line[9], "runtime":line[10]})
+	benchmarks.setdefault(line[2],[]).append({"truth":line[3], "races":int(line[6]), "compiler":line[9], "runtime":line[10]})
 
 truePositive = 0
 falsePositive = 0
@@ -32,13 +32,17 @@ for app,runs in benchmarks.items():
 	for run in runs[1:]:
 		if Nbenchmarks[app]["races"]<run["races"]:
 			Nbenchmarks[app]["races"]=run["races"]
+
+falsePositives = []
+falseNegatives = []
 		
-def classify(truth, races):
+def classify(truth, races, testcase):
 	global positive, negative, falseNegative, truePositive, trueNegative, falsePositive
 	if truth.upper() == 'TRUE':
 		positive += 1 
 		if races == 0:
 			falseNegative += 1
+			falseNegatives.append(testcase)
 		else:
 			truePositive += 1
 	else:
@@ -47,19 +51,24 @@ def classify(truth, races):
 			trueNegative += 1
 		else:
 			falsePositive += 1
-	
+			falsePositives.append(testcase)
+
+compilerErrList = []
+runtimeErrList = []
 		
 for app,run in Nbenchmarks.items():
 	if run["compiler"] == '0':
 		compilertrue += 1
 		if run["runtime"] == '0':
-			classify(run["truth"], run["races"])
+			classify(run["truth"], run["races"], app)
 			runtimetrue += 1
 		elif run["runtime"] == '11':
 			runtimeerror += 1
+			runtimeErrList.append(app)
 		elif run["runtime"] == '124':
+			runtimeErrList.append(app)
 			if (run["races"]>0):
-				classify(run["truth"], run["races"])
+				classify(run["truth"], run["races"], app)
 				runtimeoutreport += 1
 			else:
 				runtimeout += 1
@@ -67,11 +76,17 @@ for app,run in Nbenchmarks.items():
 			print(app, run["runtime"], "there are some errors in your runtime data.")
 	elif run["compiler"] in ('1', '2', '4', '134', '254'):
 		compilererror += 1
+		compilerErrList.append(app)
 	elif run["compiler"] == '11':
 		compilertimeout += 1
+		compilerErrList.append(app)
 	else:
 		print(app, run["compiler"], "there are some errors in your compiler data.")
 
+print("Runtime Failures: " + ("\n".join(runtimeErrList)) + "\n")
+print("Compilation Failure: " + ("\n".join(compilerErrList)) + "\n")
+print("False Positives: " + ("\n".join(falsePositives)) + "\n")
+print("False Negatives: " + ("\n".join( falseNegatives)) + "\n")
 print("total test case is ", len(Nbenchmarks))
 print("compiler segmentation fault is ", compilererror)
 print("runtime segmentation fault is ", runtimeerror)

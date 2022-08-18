@@ -44,6 +44,9 @@
 # IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+export PATH=$PATH
+
 CSV_HEADER="tool,id,filename,haverace,threads,dataset,races,elapsed-time(seconds),used-mem(KBs),compile-return,runtime-return"
 TESTS=($(grep -l main micro-benchmarks/*.c micro-benchmarks/*.cpp))
 FORTRANTESTS=($(find micro-benchmarks-fortran -iregex ".*\.F[0-9]*" -o -iregex ".*\.for"))
@@ -92,7 +95,7 @@ ICPC_COMPILE_FLAGS="-O0 -fopenmp -qopenmp-offload=host -g"
 ROMP_CPP_COMPILE_FLAGS="-O0 -g -std=c++11 -fopenmp -lomp"
 ROMP_C_COMPILE_FLAGS="-O0 -g -fopenmp -lomp"
 
-FORTRAN_LINK_FLAGS="-ffree-line-length-none -fopenmp -c -fsanitize=thread"
+FORTRAN_LINK_FLAGS="-fopenmp -g -O0 -fsanitize=thread"
 FORTRAN_COMPILE_FLAGS="-O0 -fopenmp -fsanitize=thread -lgfortran"
 IFORT_FORTRAN_FLAGS="-g -O0 -free -qopenmp -qopenmp-offload=host -Tf"
 
@@ -550,8 +553,7 @@ for tool in "${TOOLS[@]}"; do
       case "$tool" in 
         gnu)        gfortran -fopenmp -lomp $additional_compile_flags $test -o $exname -lm ;;
         intel)      ifort $IFORT_FORTRAN_FLAGS  $test -o $exname -lm ;;
-        tsan-clang) gfortran $FORTRAN_LINK_FLAGS $additional_compile_flags $test -o $linkname;
-		    clang $FORTRAN_COMPILE_FLAGS $linkname $linklib -o $exname -lm;;
+        tsan-clang) flang $FORTRAN_LINK_FLAGS $additional_compile_flags $test -o $exname -lm;;
         tsan-gcc)   gfortran -fopenmp -fsanitize=thread $additional_compile_flags  $test -o $exname -lm  ;;
         archer)     gfortran $FORTRAN_LINK_FLAGS $additional_compile_flags $test -o $linkname;
 	            clang-archer $FORTRAN_COMPILE_FLAGS $linkname $linklib -o $exname $ARCHER_COMPILE_FLAGS -lm;;
